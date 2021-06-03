@@ -1,6 +1,7 @@
 const { Schema, model } = require('mongoose');
 const productSchema = require('./products.js');
 
+// Estrcuturar data de order
 const orderSchema = new Schema(
   {
     id: {
