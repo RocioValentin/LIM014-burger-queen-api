@@ -19,7 +19,7 @@ module.exports = (app, nextMain) => {
    */
   app.post('/auth', (req, resp, next) => {
     const { email, password } = req.body;
-
+    resp.json({ text: 'Hola mundo' });
     if (!email || !password) {
       return next(400);
     }
