@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
+const User = require('../models/user');
 
 const { secret } = config;
 
@@ -19,13 +20,15 @@ module.exports = (app, nextMain) => {
    */
   app.post('/auth', (req, resp, next) => {
     const { email, password } = req.body;
-    resp.json({ text: 'Hola mundo' });
+    // resp.json({ text: 'Hola mundo' });
     if (!email || !password) {
       return next(400);
     }
-
     // TODO: autenticar a la usuarix
-    next();
+    const user = User.findOne({ email });
+    // generar token
+    const token = jwt.sign({ id: user._id }, secret);
+    return resp.json({ token });
   });
 
   return nextMain();
