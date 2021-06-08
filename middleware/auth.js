@@ -15,9 +15,16 @@ module.exports = (secret) => (req, resp, next) => {
   }
 
   jwt.verify(token, secret, (err, decodedToken) => {
+    console.log('entrandooo');
     if (err) {
       return next(403);
     }
+    if (!token) {
+      console.log('token erróneo');
+      return next(400);
+    }
+    req.decodedToken = decodedToken.uid;
+    next();
 
     // TODO: Verificar identidad del usuario usando `decodeToken.uid`
   });
