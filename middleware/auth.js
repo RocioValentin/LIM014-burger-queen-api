@@ -1,3 +1,4 @@
+// esto es lo primero
 const jwt = require('jsonwebtoken');
 
 module.exports = (secret) => (req, resp, next) => {
@@ -31,7 +32,7 @@ module.exports.isAdmin = (req) => (
   // TODO: decidir por la informacion del request si la usuaria es admin
   false
 );
-
+// es lo que primero se avanza 
 module.exports.requireAuth = (req, resp, next) => (
   (!module.exports.isAuthenticated(req))
     ? next(401)

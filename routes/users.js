@@ -8,6 +8,7 @@ const {
 const {
   getUsers,
 } = require('../controller/users');
+const { findById } = require('../models/user');
 
 const initAdminUser = (app, next) => {
   const { adminEmail, adminPassword } = app.get('config');
@@ -21,17 +22,14 @@ const initAdminUser = (app, next) => {
     roles: { admin: true },
   };
 
-  User.findOne(adminUser, (err, doc) => {
-    if (err) {
-      return next(400);
-    }
-
+  const findUsers = User.findOne({ email: adminEmail });
+  findUsers.then((doc) => {
     if (doc) {
       return next(200);
     }
     const newAdminUser = new User(adminUser);
     newAdminUser.save();
-  });
+  }).catch((err) => console.info(err));
 
   // TODO: crear usuaria admin
 
@@ -87,6 +85,7 @@ module.exports = (app, next) => {
    * @code {401} si no hay cabecera de autenticación
    * @code {403} si no es ni admin
    */
+  // ruta, intermidiario middleware, función requerida
   app.get('/users', requireAdmin, getUsers);
 
   /**
