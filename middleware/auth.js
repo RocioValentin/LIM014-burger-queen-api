@@ -24,7 +24,11 @@ module.exports = (secret) => (req, resp, next) => {
       return next(400);
     }
     req.decodedToken = decodedToken.uid;
-    next();
+    console.log(decodedToken.uid);
+    return resp.status(200).json({
+      msg: 'usuario autenticado',
+      decodedToken,
+    });
 
     // TODO: Verificar identidad del usuario usando `decodeToken.uid`
   });
@@ -39,7 +43,7 @@ module.exports.isAdmin = (req) => (
   // TODO: decidir por la informacion del request si la usuaria es admin
   false
 );
-// es lo que primero se avanza 
+// es lo que primero se avanza
 module.exports.requireAuth = (req, resp, next) => (
   (!module.exports.isAuthenticated(req))
     ? next(401)
