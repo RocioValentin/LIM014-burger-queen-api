@@ -33,6 +33,7 @@ module.exports = {
         else if (!result) resp.status(400).json({ msg: 'contraseña incorrecta' });
         jwt.sign(
           {
+            uid: doc.id,
             email: doc.email,
             roles: doc.roles,
           },
