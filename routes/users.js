@@ -7,8 +7,9 @@ const {
 
 const {
   getUsers,
+  createUsers,
 } = require('../controller/users');
-const { findById } = require('../models/user');
+// const { findById } = require('../models/user');
 
 const initAdminUser = (app, next) => {
   const { adminEmail, adminPassword } = app.get('config');
@@ -126,8 +127,7 @@ module.exports = (app, next) => {
    * @code {401} si no hay cabecera de autenticación
    * @code {403} si ya existe usuaria con ese `email`
    */
-  app.post('/users', requireAdmin, (req, resp, next) => {
-  });
+  app.post('/users', requireAdmin, createUsers);
 
   /**
    * @name PUT /users
