@@ -8,8 +8,8 @@ const {
 const {
   getUsers,
   createUsers,
+  deleteUser,
 } = require('../controller/users');
-// const { findById } = require('../models/user');
 
 const initAdminUser = (app, next) => {
   const { adminEmail, adminPassword } = app.get('config');
@@ -23,16 +23,18 @@ const initAdminUser = (app, next) => {
     roles: { admin: true },
   };
 
-  const findUsers = User.findOne({ email: adminEmail });
-  findUsers.then((doc) => {
-    if (doc) {
-      return next(200);
-    }
-    const newAdminUser = new User(adminUser);
-    newAdminUser.save();
-  }).catch((err) => console.info(err));
-
   // TODO: crear usuaria admin
+
+  const findUser = User.findOne({ email: adminEmail });
+  findUser
+    .then((doc) => {
+      if (doc) {
+        return next(200);
+      }
+      const newAdminUser = new User(adminUser);
+      newAdminUser.save();
+    })
+    .catch((err) => console.info(err));
 
   next();
 };
@@ -170,8 +172,7 @@ module.exports = (app, next) => {
    * @code {403} si no es ni admin o la misma usuaria
    * @code {404} si la usuaria solicitada no existe
    */
-  app.delete('/users/:uid', requireAuth, (req, resp, next) => {
-  });
+  app.delete('/users/:uid', requireAuth, deleteUser);
 
   initAdminUser(app, next);
 };

@@ -15,9 +15,6 @@ module.exports = (app, nextMain) => {
    * @auth No requiere autenticación
    */
   app.post('/auth', validateUser);
-  // generar token
-  // const token = jwt.sign({ id: user._id }, secret);
-  // return resp.json({ token });
 
   return nextMain();
 };

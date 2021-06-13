@@ -1,52 +1,49 @@
+const bcrypt = require('bcrypt');
 const User = require('../models/user');
-
 // Aquí debe ir la lógica de crear al usuario y
 // dar acceso a la bs
 module.exports = {
-  getUsers: (req, resp, next) => {
+  getUsers: async (req, resp, next) => {
+
   },
-  createUsers: (req, resp, next) => {
-    const user = new User({
-      email: req.body.email,
-      password: req.body.password,
-      roles: req.body.roles.admin,
-    });
+  createUsers: async (req, resp, next) => {
+    const { email, password, roles } = req.body;
+    try {
+      if (!email || !password || password <= 5) return next(400);
 
-    user.save((err, usr) => {
-      err && resp.status(500).send(err.message);
+      const findUser = await User.findOne({ email });
+      if (findUser) {
+        return next(403);
+      }
 
-      resp.status(200).json(usr);
-    });
-    next();
+      const saltRounds = 10;
+      const newUser = new User({
+        email,
+        password: bcrypt.hashSync(password, saltRounds),
+        roles: roles.admin,
+      });
 
-    // const user = new User({
-    //   email: req.body.email,
-    //   password: req.body.password,
-    //   roles: req.body.roles.admin,
-    // });
-    // console.log(user);
-    // const saveUser = User.save(user);
-    // saveUser.then((usr) => {
-    //   if (usr) {
-    //     resp.status(200).json(usr);
-    //   }
-
-    // })
-    //   .catch((err) => next(err));
-
-    // try {
-    //   console.log('entro al try');
-    //   const newUser = new User(req.body);
-    //   const user = await newUser.save(newUser);
-    //   resp.status(200).json({
-    //     _id: user._id,
-    //     email: user.email,
-    //     password: user.password,
-    //     roles: user.roles,
-    //   });
-    // } catch (err) {
-    //   console.log('entro al catch');
-    //   next(err);
-    // }
+      const user = await newUser.save(newUser);
+      resp.status(200).json({
+        id: user.id,
+        email: user.email,
+        password: user.password,
+        roles: user.roles,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+  deleteUser: async (req, res, next) => {
+    try {
+      console.log('estoy en try');
+      const userId = req.params.uid;
+      const findUser = await User.findOne({ _id: userId });
+      console.log(findUser);
+      await User.findByIdAndDelete({ _id: userId });
+      res.status(200).json(findUser);
+    } catch (err) {
+      next(err);
+    }
   },
 };

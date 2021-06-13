@@ -4,8 +4,9 @@ const User = require('../models/user');
 
 module.exports = (secret) => (req, resp, next) => {
   const { authorization } = req.headers;
-
+  // Si no exite next() 401
   if (!authorization) {
+    // return resp.status(401).send({message: 'No tiene autenticación'});
     return next();
   }
 
@@ -16,49 +17,36 @@ module.exports = (secret) => (req, resp, next) => {
   }
 
   jwt.verify(token, secret, (err, decodedToken) => {
-    console.log('entrandooo');
     if (err) {
-      return next(403);
+      return next(401);
     }
 
-    const user = User.findById(decodedToken.uid);
-
-    user.then((doc) => {
-      console.log(doc);
-      if (!doc) {
-        console.log('usuario no encontrado');
-        return next(400);
-      }
-      req.userAuth = decodedToken;
-      return next();
-      // console.log('Soy:', req);
-      // return resp.status(200).json({
-      //   msg: 'usuario autenticado',
-      // });
-    }).catch((err) => console.log(err));
-
     // TODO: Verificar identidad del usuario usando `decodeToken.uid`
-    // if (err) { return next(403); } const usersService =
-    //  new UsersService(); const { userId } = decodedToken; const user
-    // = await usersService.getUser({ userId }); if (user && user.email ===
-    // decodedToken.userEmail && user.roles.admin === decodedToken.userRol.admin)
-    // { req.userDecoded = decodedToken; return next(); } return next(401); });
+    const userFindById = User.findById(decodedToken.uid);
+    userFindById
+      .then((doc) => {
+        if (!doc) {
+          return next(400);
+        }
+        req.userAuth = decodedToken;
+        return next();
+      })
+      .catch(() => next(403));
   });
 };
 
+// TODO: decidir por la informacion del request si la usuaria esta autenticada
 module.exports.isAuthenticated = (req) => {
+  // Comprobar si en el objeto req existe un campo authorization
   if (req.userAuth) {
     return true;
   }
   return false;
 };
-// TODO: decidir por la informacion del request si la usuaria esta autenticada
-// module.exports.isAuthenticated = (req) =>
-// { if (req.userDecoded) { return true; } return false; };
 
+// TODO: decidir por la informacion del request si la usuaria es admin
 module.exports.isAdmin = (req) => (req.userAuth.roles.admin);
 
-// es lo que primero se avanza
 module.exports.requireAuth = (req, resp, next) => (
   (!module.exports.isAuthenticated(req))
     ? next(401)
