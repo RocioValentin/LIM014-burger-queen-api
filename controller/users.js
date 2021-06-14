@@ -1,10 +1,30 @@
 const bcrypt = require('bcrypt');
+const { model } = require('mongoose');
 const User = require('../models/user');
+
+const options = {
+  page: 1,
+  limit: 3,
+};
 // Aquí debe ir la lógica de crear al usuario y
 // dar acceso a la bs
 module.exports = {
   getUsers: async (req, resp, next) => {
+    User.paginate({}, options, (err, docs) => {
+      resp.send({
+        items: docs,
+      });
+    });
+  },
+  getUserId: async (req, resp, next) => {
+    try {
+      const userId = req.params.uid;
+      const findUser = await User.findOne({ _id: userId });
 
+      return resp.json(findUser);
+    } catch (error) {
+      return next(404);
+    }
   },
   createUsers: async (req, resp, next) => {
     const { email, password, roles } = req.body;
@@ -15,16 +35,14 @@ module.exports = {
       if (findUser) {
         return next(403);
       }
-
-      const saltRounds = 10;
       const newUser = new User({
         email,
-        password: bcrypt.hashSync(password, saltRounds),
+        password,
         roles: roles.admin,
       });
 
       const user = await newUser.save(newUser);
-      resp.status(200).json({
+      resp.status(200).send({
         id: user.id,
         email: user.email,
         password: user.password,
@@ -34,14 +52,33 @@ module.exports = {
       next(err);
     }
   },
-  deleteUser: async (req, res, next) => {
+
+  updateUser: async (req, res, next) => {
+    const { email, password, roles } = req.body;
     try {
       console.log('estoy en try');
       const userId = req.params.uid;
+      const saltRounds = 10;
+
+      await User.findByIdAndUpdate({ _id: userId }, {
+        email,
+        password: bcrypt.hashSync(password, saltRounds),
+        roles,
+      });
+
       const findUser = await User.findOne({ _id: userId });
-      console.log(findUser);
+      res.status(200).send(findUser);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  deleteUser: async (req, resp, next) => {
+    try {
+      const userId = req.params.uid;
+      const findUser = await User.findOne({ _id: userId });
       await User.findByIdAndDelete({ _id: userId });
-      res.status(200).json(findUser);
+      resp.status(200).send(findUser);
     } catch (err) {
       next(err);
     }
