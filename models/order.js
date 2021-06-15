@@ -1,5 +1,4 @@
 const { Schema, model } = require('mongoose');
-const productSchema = require('./products.js');
 
 // Estrcuturar data de order
 const orderSchema = new Schema(
@@ -22,7 +21,9 @@ const orderSchema = new Schema(
           type: Number,
         },
         product: {
-          type: mongoose.Schema.Types.ObjectId,
+          type: Schema.Types.ObjectId,
+          ref: 'products',
+          required: true,
         },
       },
     ],

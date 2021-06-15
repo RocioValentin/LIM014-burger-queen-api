@@ -1,7 +1,8 @@
 const Product = require('../models/product');
 
 module.exports = {
-  getProducts: async (req, resp, next) => {},
+  getProducts: async (req, resp, next) => {
+  },
   getProductId: async (req, resp, next) => {
     try {
       const productId = req.params.uid;
