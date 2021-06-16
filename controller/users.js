@@ -6,24 +6,17 @@ const User = require('../models/user');
 // dar acceso a la bs
 module.exports = {
   getUsers: async (req, resp, next) => {
-    console.log('dede', req.headers);
-
     const options = {
       page: parseInt(req.query.page, 10) || 1,
       limit: parseInt(req.query.limit, 10) || 10,
     };
-    await User.paginate({}, options);
+    const paginates = await User.paginate({}, options);
     resp.links({
-      next: `http://localhost:8081/users?limit=${options.limit}&page=${options.page - 1}`,
-      last: `http://localhost:8081/users?limit=${options.limit}&page=${options.page - 1}`,
+      prev: `http://localhost:8081/users?limit=${options.limit}&page=${options.page - 1}`,
     });
-    // const linkHeader = {
-    //   prev: paginate.hasPrevPage ? `http://localhost:8081/users?limit=${options.limit}&page=${options.page - 1}` : false,
-    // };
 
-    // const
-    // resp.set('link', linkHeader);
-    // resp.send(paginate);
+    resp.send(paginates);
+    next();
   },
   getUserId: async (req, resp, next) => {
     try {

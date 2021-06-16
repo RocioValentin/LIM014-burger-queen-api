@@ -8,21 +8,21 @@ module.exports = {
       const productId = req.params.uid;
       const findProduct = await Product.findOne({ _id: productId });
 
-      return resp.json(findProduct);
+      return resp.status(200).json(findProduct);
     } catch (error) {
       return next(404);
     }
   },
   createProducts: async (req, resp, next) => {
+    console.log('fechaa', Date.now());
     const {
       name,
       price,
       image,
       category,
-      dateEntry,
     } = req.body;
     try {
-      if (!name || !price || !image || !category || !dateEntry) return next(400);
+      if (!name || !price || !image || !category) return next(400);
 
       const findProduct = await Product.findOne({ name });
       if (findProduct) {
@@ -33,7 +33,6 @@ module.exports = {
         price,
         image,
         category,
-        dateEntry,
       });
 
       const product = await newProduct.save(newProduct);
@@ -55,7 +54,6 @@ module.exports = {
       price,
       image,
       category,
-      dateEntry,
     } = req.body;
     try {
       const productId = req.params.uid;
@@ -65,7 +63,6 @@ module.exports = {
         price,
         image,
         category,
-        dateEntry,
       });
 
       const findProduct = await Product.findOne({ _id: productId });
