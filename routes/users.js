@@ -21,7 +21,7 @@ const initAdminUser = (app, next) => {
 
   const adminUser = {
     email: adminEmail,
-    password: bcrypt.hashSync(adminPassword, 10),
+    password: adminPassword,
     roles: { admin: true },
   };
 
@@ -30,6 +30,7 @@ const initAdminUser = (app, next) => {
   const findUser = User.findOne({ email: adminEmail });
   findUser
     .then((doc) => {
+      // console.log(adminUser);
       if (doc) {
         return next(200);
       }

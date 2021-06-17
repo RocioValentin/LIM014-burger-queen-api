@@ -13,6 +13,7 @@ module.exports = {
     const paginates = await User.paginate({}, options);
     resp.links({
       prev: `http://localhost:8081/users?limit=${options.limit}&page=${options.page - 1}`,
+
     });
 
     resp.send(paginates);
@@ -25,11 +26,18 @@ module.exports = {
 
       return resp.json(findUser);
     } catch (error) {
+      // console.log('findddddddddd', error);
       return next(404);
     }
   },
   createUsers: async (req, resp, next) => {
-    const { email, password, roles } = req.body;
+    const { email, password } = req.body;
+    let roles;
+    if (req.body.roles) {
+      roles = req.body.roles;
+    } else {
+      roles = { admin: false };
+    }
     try {
       if (!email || !password || password <= 5) return next(400);
 
@@ -37,10 +45,11 @@ module.exports = {
       if (findUser) {
         return next(403);
       }
+
       const newUser = new User({
         email,
         password,
-        roles: roles.admin,
+        roles: roles.admin || false,
       });
 
       const user = await newUser.save(newUser);
@@ -58,7 +67,6 @@ module.exports = {
   updateUser: async (req, res, next) => {
     const { email, password, roles } = req.body;
     try {
-      console.log('estoy en try');
       const userId = req.params.uid;
       const saltRounds = 10;
 

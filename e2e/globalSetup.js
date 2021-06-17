@@ -2,6 +2,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 const nodeFetch = require('node-fetch');
 const kill = require('tree-kill');
+const setUp = require('@shelf/jest-mongodb/setup');
 
 const config = require('../config');
 
@@ -28,7 +29,6 @@ const __e2e = {
   // testObjects: [],
 };
 
-
 const fetch = (url, opts = {}) => nodeFetch(`${baseUrl}${url}`, {
   ...opts,
   headers: {
@@ -41,7 +41,6 @@ const fetch = (url, opts = {}) => nodeFetch(`${baseUrl}${url}`, {
       : {}
   ),
 });
-
 
 const fetchWithAuth = (token) => (url, opts = {}) => fetch(url, {
   ...opts,
@@ -72,6 +71,7 @@ const createTestUser = () => fetchAsAdmin('/users', {
   })
   .then(({ token }) => Object.assign(__e2e, { testUserToken: token }));
 
+// console.log(__e2e.adminUserCredentials)
 const checkAdminCredentials = () => fetch('/auth', {
   method: 'POST',
   body: __e2e.adminUserCredentials,
@@ -84,7 +84,6 @@ const checkAdminCredentials = () => fetch('/auth', {
     return resp.json();
   })
   .then(({ token }) => Object.assign(__e2e, { adminToken: token }));
-
 
 const waitForServerToBeReady = (retries = 10) => new Promise((resolve, reject) => {
   if (!retries) {
@@ -102,17 +101,18 @@ const waitForServerToBeReady = (retries = 10) => new Promise((resolve, reject) =
   }, 1000);
 });
 
-
-module.exports = () => new Promise((resolve, reject) => {
+module.exports = () => new Promise(async (resolve, reject) => {
   if (process.env.REMOTE_URL) {
     console.info(`Running tests on remote server ${process.env.REMOTE_URL}`);
     return resolve();
   }
 
   // TODO: Configurar DB de tests
+  await setUp();
+  process.env.DB_URL = process.env.MONGO_URL;
 
   console.info('Staring local server...');
-  const child = spawn('npm', ['start', process.env.PORT || 8888], {
+  const child = spawn('node', ['index.js', process.env.PORT || 8888], {
     cwd: path.resolve(__dirname, '../'),
     stdio: ['ignore', 'pipe', 'pipe'],
   });

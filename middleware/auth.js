@@ -29,6 +29,7 @@ module.exports = (secret) => (req, resp, next) => {
           return next(400);
         }
         req.userAuth = decodedToken;
+        // console.log(decodedToken);
         return next();
       })
       .catch(() => next(403));
@@ -45,7 +46,7 @@ module.exports.isAuthenticated = (req) => {
 };
 
 // TODO: decidir por la informacion del request si la usuaria es admin
-module.exports.isAdmin = (req) => (req.userAuth.roles.admin);
+module.exports.isAdmin = (req) => (req.userAuth.roles.admin || false);
 
 module.exports.requireAuth = (req, resp, next) => (
   (!module.exports.isAuthenticated(req))
@@ -54,6 +55,7 @@ module.exports.requireAuth = (req, resp, next) => (
 );
 
 module.exports.requireAdmin = (req, resp, next) => (
+
   // eslint-disable-next-line no-nested-ternary
   (!module.exports.isAuthenticated(req))
     ? next(401)

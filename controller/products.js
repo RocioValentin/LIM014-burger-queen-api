@@ -2,6 +2,7 @@ const Product = require('../models/product');
 
 module.exports = {
   getProducts: async (req, resp, next) => {
+
   },
   getProductId: async (req, resp, next) => {
     try {
@@ -14,7 +15,6 @@ module.exports = {
     }
   },
   createProducts: async (req, resp, next) => {
-    console.log('fechaa', Date.now());
     const {
       name,
       price,
