@@ -1,23 +1,26 @@
 const bcrypt = require('bcrypt');
-const { model } = require('mongoose');
 const User = require('../models/user');
 
 // Aquí debe ir la lógica de crear al usuario y
 // dar acceso a la bs
 module.exports = {
   getUsers: async (req, resp, next) => {
-    const options = {
-      page: parseInt(req.query.page, 10) || 1,
-      limit: parseInt(req.query.limit, 10) || 10,
-    };
-    const paginates = await User.paginate({}, options);
-    resp.links({
-      prev: `http://localhost:8081/users?limit=${options.limit}&page=${options.page - 1}`,
+    try {
+      const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
 
-    });
-
-    resp.send(paginates);
-    next();
+      const options = {
+        page: parseInt(req.query.page, 10) || 1,
+        limit: parseInt(req.query.limit, 10) || 10,
+      };
+      const userPaginate = await User.paginate({}, options);
+      resp.links({
+        first: `${url}?limit=${options.limit}&page=${1}`,
+        prev: `${url}?limit=${options.limit}&page=${options.page - 1}`,
+        next: `${url}?limit=${options.limit}&page=${options.page + 1}`,
+        last: `${url}?limit=${options.limit}&page=${userPaginate.totalPages}`,
+      });
+      return resp.status(200).json(userPaginate);
+    } catch (err) { next(err); }
   },
   getUserId: async (req, resp, next) => {
     try {
