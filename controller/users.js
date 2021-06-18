@@ -1,6 +1,16 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
 
+const emailOrId = (params) => {
+  const checkForValidMongoDbID = new RegExp('^[0-9a-fA-F]{24}$');
+  const validObjectId = checkForValidMongoDbID.test(params);
+
+  if (validObjectId) {
+    return { _id: params };
+  }
+  return { email: params };
+};
+
 // Aquí debe ir la lógica de crear al usuario y
 // dar acceso a la bs
 module.exports = {
@@ -25,15 +35,9 @@ module.exports = {
   getUserId: async (req, resp, next) => {
     try {
       const { uid } = req.params;
-      const checkForValidMongoDbID = new RegExp('^[0-9a-fA-F]{24}$');
-      const validObjectId = checkForValidMongoDbID.test(uid);
-
-      if (validObjectId) {
-        const findUserForId = await User.findOne({ _id: uid });
-        return resp.status(200).json(findUserForId);
-      }
-      const findUserForEmail = await User.findOne({ email: uid });
-      return resp.status(200).json(findUserForEmail);
+      const getEmailOrId = emailOrId(uid);
+      const findUser = await User.findOne(getEmailOrId);
+      return resp.status(200).json(findUser);
     } catch (err) {
       return next(404);
     }
