@@ -24,12 +24,17 @@ module.exports = {
   },
   getUserId: async (req, resp, next) => {
     try {
-      const userId = req.params.uid;
-      const findUser = await User.findOne({ _id: userId });
+      const { uid } = req.params;
+      const checkForValidMongoDbID = new RegExp('^[0-9a-fA-F]{24}$');
+      const validObjectId = checkForValidMongoDbID.test(uid);
 
-      return resp.json(findUser);
-    } catch (error) {
-      // console.log('findddddddddd', error);
+      if (validObjectId) {
+        const findUserForId = await User.findOne({ _id: uid });
+        return resp.status(200).json(findUserForId);
+      }
+      const findUserForEmail = await User.findOne({ email: uid });
+      return resp.status(200).json(findUserForEmail);
+    } catch (err) {
       return next(404);
     }
   },

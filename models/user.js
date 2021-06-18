@@ -8,10 +8,6 @@ const userSchema = new Schema({
     type: String,
     required: true,
     lowercase: true,
-    validate: {
-      validator: (v) => /^\S+@\S+\.\S+$/.test(v),
-      message: (props) => `${props.value} is not a valid Email!`,
-    },
   },
   password: {
     type: String,
