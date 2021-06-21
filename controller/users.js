@@ -29,17 +29,20 @@ module.exports = {
         next: `${url}?limit=${options.limit}&page=${options.page + 1}`,
         last: `${url}?limit=${options.limit}&page=${userPaginate.totalPages}`,
       });
-      return resp.status(200).json(userPaginate);
+      return resp.status(200).json(userPaginate.docs);
     } catch (err) { next(err); }
   },
   getUserId: async (req, resp, next) => {
     try {
       const { uid } = req.params;
       const getEmailOrId = emailOrId(uid);
-      const findUser = await User.findOne(getEmailOrId);
-      return resp.status(200).json(findUser);
+      const findUser = await User.findOne(getEmailOrId).lean();
+      if (!findUser) {
+        return next(404);
+      }
+      return resp.json(findUser);
     } catch (err) {
-      return next(404);
+      return next(err);
     }
   },
   createUsers: async (req, resp, next) => {
@@ -68,7 +71,7 @@ module.exports = {
       resp.status(200).send({
         id: user.id,
         email: user.email,
-        password: user.password,
+        // password: user.password,
         roles: user.roles,
       });
     } catch (err) {

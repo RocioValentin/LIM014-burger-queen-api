@@ -16,9 +16,10 @@ module.exports = (secret) => (req, resp, next) => {
     return next();
   }
 
+  // Verificar la validez del token
   jwt.verify(token, secret, (err, decodedToken) => {
     if (err) {
-      return next(401);
+      return next(403);
     }
 
     // TODO: Verificar identidad del usuario usando `decodeToken.uid`
@@ -26,7 +27,7 @@ module.exports = (secret) => (req, resp, next) => {
     userFindById
       .then((doc) => {
         if (!doc) {
-          return next(400);
+          return next(404);
         }
         req.userAuth = decodedToken;
         // console.log(decodedToken);
