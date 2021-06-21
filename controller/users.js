@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
+const { isAdmin } = require('../middleware/auth');
 
 const emailOrId = (params) => {
   const checkForValidMongoDbID = new RegExp('^[0-9a-fA-F]{24}$');
@@ -16,8 +17,7 @@ const emailOrId = (params) => {
 module.exports = {
   getUsers: async (req, resp, next) => {
     try {
-      const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
-
+      const url = `${req.protocol}://${req.get('host')}${req.path}`;
       const options = {
         page: parseInt(req.query.page, 10) || 1,
         limit: parseInt(req.query.limit, 10) || 10,
@@ -40,7 +40,9 @@ module.exports = {
       if (!findUser) {
         return next(404);
       }
-      return resp.json(findUser);
+      if (req.userAuth.uid === findUser._id.toString() || isAdmin(req)) return resp.json(findUser);
+      // console.log(req.userAuth, findUser);
+      return next(403);
     } catch (err) {
       return next(err);
     }
