@@ -2,7 +2,21 @@ const Product = require('../models/product');
 
 module.exports = {
   getProducts: async (req, resp, next) => {
-
+    try {
+      const url = `${req.protocol}://${req.get('host')}${req.path}`;
+      const options = {
+        page: parseInt(req.query.page, 10) || 1,
+        limit: parseInt(req.query.limit, 10) || 10,
+      };
+      const productPaginate = await Product.paginate({}, options);
+      resp.links({
+        first: `${url}?limit=${options.limit}&page=${1}`,
+        prev: `${url}?limit=${options.limit}&page=${options.page - 1}`,
+        next: `${url}?limit=${options.limit}&page=${options.page + 1}`,
+        last: `${url}?limit=${options.limit}&page=${productPaginate.totalPages}`,
+      });
+      return resp.status(200).json(productPaginate.docs);
+    } catch (err) { next(err); }
   },
   getProductId: async (req, resp, next) => {
     try {

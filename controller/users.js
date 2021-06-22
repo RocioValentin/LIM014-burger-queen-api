@@ -12,6 +12,18 @@ const emailOrId = (params) => {
   return { email: params };
 };
 
+const isAValidEmail = (email) => {
+  const emailRegex = /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/i;
+  return (emailRegex.test(email));
+};
+
+const isAWeakPassword = (password) => ((password.length <= 3));
+
+// contraseña valido /?=.*[0-9]/
+// contraseña invalido ^$
+// email invalido /?=.*[0-9]/
+// email valido ^[^@]+@[^@]+\.[a-zA-Z]{2,}$
+
 // Aquí debe ir la lógica de crear al usuario y
 // dar acceso a la bs
 module.exports = {
@@ -63,15 +75,19 @@ module.exports = {
         return next(403);
       }
 
+      if (password && isAWeakPassword(password)) return next(400);
+
+      if (email && !isAValidEmail(email)) return next(400);
+
       const newUser = new User({
         email,
         password,
-        roles: roles.admin || false,
+        roles,
       });
 
       const user = await newUser.save(newUser);
-      resp.status(200).send({
-        id: user.id,
+      return resp.status(200).send({
+        _id: user._id,
         email: user.email,
         // password: user.password,
         roles: user.roles,
@@ -84,19 +100,30 @@ module.exports = {
   updateUser: async (req, res, next) => {
     const { email, password, roles } = req.body;
     try {
-      const userId = req.params.uid;
-      const saltRounds = 10;
+      // const userId = req.params.uid;
+      // const saltRounds = 10;
+      const { uid } = req.params;
+      const getEmailOrId = emailOrId(uid);
 
-      await User.findByIdAndUpdate({ _id: userId }, {
-        email,
-        password: bcrypt.hashSync(password, saltRounds),
-        roles,
+      const findUser = await User.findOne(getEmailOrId);
+      if (req.userAuth.uid !== findUser._id.toString() || !isAdmin(req)) {
+        return next(403);
+      }
+
+      await User.findByIdAndUpdate(getEmailOrId, {
+        $set: {
+          email,
+          password,
+          roles,
+        },
       });
+      // console.log(req.userAuth, findUser);
 
-      const findUser = await User.findOne({ _id: userId });
-      res.status(200).send(findUser);
+      return res.json(findUser);
     } catch (err) {
-      next(err);
+      next(404);
+      // should fail with 404 when admin not found
+      // cambio de err a 404
     }
   },
 
