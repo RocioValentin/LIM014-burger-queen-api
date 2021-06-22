@@ -98,30 +98,38 @@ module.exports = {
   },
 
   updateUser: async (req, res, next) => {
-    const { email, password, roles } = req.body;
+    const user = req.body;
+    // const { email, password, roles } = req.body;
     try {
+      if (!user) return next(400);
       // const userId = req.params.uid;
       // const saltRounds = 10;
       const { uid } = req.params;
       const getEmailOrId = emailOrId(uid);
 
       const findUser = await User.findOne(getEmailOrId);
+      if (!findUser) return next(404);
+      console.log('wellll', findUser);
       if (req.userAuth.uid !== findUser._id.toString() || !isAdmin(req)) {
         return next(403);
       }
 
+      if (user.password && isAWeakPassword(user.password)) return next(400);
+
+      if (user.email && !isAValidEmail(user.email)) return next(400);
+
       await User.findByIdAndUpdate(getEmailOrId, {
         $set: {
-          email,
-          password,
-          roles,
+          email: user.email,
+          password: user.password,
+          roles: user.roles,
         },
-      });
+      }, { new: true });
       // console.log(req.userAuth, findUser);
 
       return res.json(findUser);
     } catch (err) {
-      next(404);
+      next(err);
       // should fail with 404 when admin not found
       // cambio de err a 404
     }
@@ -129,12 +137,19 @@ module.exports = {
 
   deleteUser: async (req, resp, next) => {
     try {
-      const userId = req.params.uid;
-      const findUser = await User.findOne({ _id: userId });
-      await User.findByIdAndDelete({ _id: userId });
-      resp.status(200).send(findUser);
+      // const userId = req.params.uid;
+      // const findUser = await User.findOne({ _id: userId });
+      const { uid } = req.params;
+      const getEmailOrId = emailOrId(uid);
+
+      const findUser = await User.findOne(getEmailOrId);
+      if (req.userAuth.uid === findUser._id.toString() || isAdmin(req)) {
+        const userDelete = await User.findByIdAndDelete(getEmailOrId);
+        return resp.status(200).send(userDelete);
+      }
+      return next(403);
     } catch (err) {
-      next(err);
+      next(404);
     }
   },
 };
