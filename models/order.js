@@ -1,5 +1,5 @@
 const { Schema, model } = require('mongoose');
-
+const moongosePaginate = require('mongoose-paginate-v2');
 // Estrcuturar data de order
 const orderSchema = new Schema(
   {
@@ -43,5 +43,5 @@ const orderSchema = new Schema(
     timestamps: true,
   },
 );
-
+orderSchema.plugin(moongosePaginate);
 module.exports = model('Order', orderSchema);

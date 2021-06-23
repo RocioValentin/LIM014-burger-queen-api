@@ -1,16 +1,22 @@
 const Order = require('../models/order');
+const {
+  Paginate,
+  emailOrId,
+  isAValidEmail,
+  isAWeakPassword,
+} = require('../utils/utils');
 
 module.exports = {
   getOrders: async (req, resp, next) => {
     try {
+      const url = `${req.protocol}://${req.get('host')}${req.path}`;
       const options = {
         page: parseInt(req.query.page, 10) || 1,
         limit: parseInt(req.query.limit, 10) || 10,
       };
-      const paginates = await Order.paginate({}, options);
-      resp.links({
-        prev: `http://localhost:8081/users?limit=${options.limit}&page=${options.page - 1}`,
-      });
+      const orderPaginate = await Order.paginate({}, options);
+      resp.links(Paginate(url, options, orderPaginate));
+      return resp.status(200).json(orderPaginate.docs);
     } catch (err) { return next(err); }
   },
 

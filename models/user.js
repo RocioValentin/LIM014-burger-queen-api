@@ -6,6 +6,10 @@ const userSchema = new Schema({
   __v: { type: Number, select: false },
   email: {
     type: String,
+    // validate: {
+     // validator: (email) => /^[-\w.%+]{1,64}@(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63}$/i.test(email),
+     // message: (props) => `${props.value} is not a valid email`,
+    // },
     required: true,
     lowercase: true,
   },
