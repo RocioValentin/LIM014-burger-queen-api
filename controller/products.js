@@ -1,4 +1,11 @@
 const Product = require('../models/product');
+const {
+  Paginate,
+  emailOrId,
+  isAValidEmail,
+  isAWeakPassword,
+} = require('../utils/utils');
+const { isAdmin } = require('../middleware/auth');
 
 module.exports = {
   getProducts: async (req, resp, next) => {
@@ -9,12 +16,7 @@ module.exports = {
         limit: parseInt(req.query.limit, 10) || 10,
       };
       const productPaginate = await Product.paginate({}, options);
-      resp.links({
-        first: `${url}?limit=${options.limit}&page=${1}`,
-        prev: `${url}?limit=${options.limit}&page=${options.page - 1}`,
-        next: `${url}?limit=${options.limit}&page=${options.page + 1}`,
-        last: `${url}?limit=${options.limit}&page=${productPaginate.totalPages}`,
-      });
+      resp.links(Paginate(url, options, productPaginate));
       return resp.status(200).json(productPaginate.docs);
     } catch (err) { next(err); }
   },
@@ -29,40 +31,26 @@ module.exports = {
     }
   },
   createProducts: async (req, resp, next) => {
-    const {
-      name,
-      price,
-      image,
-      category,
-    } = req.body;
+    const newProduct = req.body;
     try {
-      if (!name || !price || !image || !category) return next(400);
-
-      const findProduct = await Product.findOne({ name });
-      if (findProduct) {
-        return next(403);
-      }
-      const newProduct = new Product({
-        name,
-        price,
-        image,
-        category,
-      });
-
-      const product = await newProduct.save(newProduct);
-      resp.status(200).send({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-        category: product.category,
-        dateEntry: product.dateEntry,
-      });
+      if (!newProduct) return next(400);
+    // const findProduct = await Product.findOne({ name });
+    //  if (findProduct) {
+    //  return next(40);
+    //  }
+      // const newProduct = {
+      //  name,
+      //  price,
+      // };
+      // if (!isAdmin(req)) return next(400);
+      const product = await Product.save(newProduct);
+      return resp.json(product);
     } catch (err) {
-      next(err);
+      next(404);
     }
   },
   updateProduct: async (req, res, next) => {
+    if (req.userAuth.roles.admin === false) return next(403);
     const {
       name,
       price,
@@ -82,7 +70,7 @@ module.exports = {
       const findProduct = await Product.findOne({ _id: productId });
       res.status(200).send(findProduct);
     } catch (err) {
-      next(err);
+      next(404);
     }
   },
   deleteProduct: async (req, resp, next) => {
@@ -92,7 +80,7 @@ module.exports = {
       await Product.findByIdAndDelete({ _id: productId });
       resp.status(200).send(findProduct);
     } catch (err) {
-      next(err);
+      next(404);
     }
   },
 };

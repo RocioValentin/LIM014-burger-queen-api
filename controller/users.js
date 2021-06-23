@@ -1,23 +1,12 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
 const { isAdmin } = require('../middleware/auth');
-
-const emailOrId = (params) => {
-  const checkForValidMongoDbID = new RegExp('^[0-9a-fA-F]{24}$');
-  const validObjectId = checkForValidMongoDbID.test(params);
-
-  if (validObjectId) {
-    return { _id: params };
-  }
-  return { email: params };
-};
-
-const isAValidEmail = (email) => {
-  const emailRegex = /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/i;
-  return (emailRegex.test(email));
-};
-
-const isAWeakPassword = (password) => ((password.length <= 3));
+const {
+  Paginate,
+  emailOrId,
+  isAValidEmail,
+  isAWeakPassword,
+} = require('../utils/utils');
 
 // contraseña valido /?=.*[0-9]/
 // contraseña invalido ^$
@@ -35,12 +24,7 @@ module.exports = {
         limit: parseInt(req.query.limit, 10) || 10,
       };
       const userPaginate = await User.paginate({}, options);
-      resp.links({
-        first: `${url}?limit=${options.limit}&page=${1}`,
-        prev: `${url}?limit=${options.limit}&page=${options.page - 1}`,
-        next: `${url}?limit=${options.limit}&page=${options.page + 1}`,
-        last: `${url}?limit=${options.limit}&page=${userPaginate.totalPages}`,
-      });
+      resp.links(Paginate(url, options, userPaginate));
       return resp.status(200).json(userPaginate.docs);
     } catch (err) { next(err); }
   },
@@ -101,7 +85,6 @@ module.exports = {
     const user = req.body;
     // const { email, password, roles } = req.body;
     try {
-      if (!user) return next(400);
       // const userId = req.params.uid;
       // const saltRounds = 10;
       const { uid } = req.params;
@@ -109,14 +92,22 @@ module.exports = {
 
       const findUser = await User.findOne(getEmailOrId);
       if (!findUser) return next(404);
-      console.log('wellll', findUser);
-      if (req.userAuth.uid !== findUser._id.toString() || !isAdmin(req)) {
+
+      if (req.userAuth.uid !== findUser._id.toString() && !isAdmin(req)) {
         return next(403);
       }
+
+      // if (!user) return next(403);
+
+      if (!isAdmin(req) && user.roles) return next(403);
+
+      if (Object.keys(user).length === 0) return next(400);
 
       if (user.password && isAWeakPassword(user.password)) return next(400);
 
       if (user.email && !isAValidEmail(user.email)) return next(400);
+
+      console.log('wellll', findUser);
 
       await User.findByIdAndUpdate(getEmailOrId, {
         $set: {
@@ -143,11 +134,13 @@ module.exports = {
       const getEmailOrId = emailOrId(uid);
 
       const findUser = await User.findOne(getEmailOrId);
-      if (req.userAuth.uid === findUser._id.toString() || isAdmin(req)) {
-        const userDelete = await User.findByIdAndDelete(getEmailOrId);
-        return resp.status(200).send(userDelete);
+      if (!findUser) return next(404);
+      if (!req.userAuth.uid === req.params.uid || !isAdmin(req)) {
+        return next(403);
       }
-      return next(403);
+      await User.findByIdAndDelete(getEmailOrId);
+
+      return resp.status(200).send(findUser);
     } catch (err) {
       next(404);
     }
