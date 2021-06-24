@@ -19,7 +19,6 @@ module.exports = {
       return resp.status(200).json(orderPaginate.docs);
     } catch (err) { return next(err); }
   },
-
   getOrderById: async (req, resp, next) => {
     try {
       const orderId = req.params.uid;
@@ -33,22 +32,18 @@ module.exports = {
   createOrder: async (req, resp, next) => {
     const {
       userId,
-      client,
       products,
     } = req.body;
     try {
-      if (!userId || !client) return next(400);
-
+      if (!products || products.length === 0) return next(400);
       const findOrder = await Order.findOne({ userId });
       if (findOrder) {
         return next(403);
       }
       const newOrder = new Order({
         userId,
-        client,
         products,
       });
-
       const order = await newOrder.save(newOrder);
       resp.status(200).send(order);
     } catch (err) {

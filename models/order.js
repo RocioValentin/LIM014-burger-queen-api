@@ -7,10 +7,6 @@ const orderSchema = new Schema(
       type: String,
       required: true,
     },
-    client: {
-      type: String,
-      required: true,
-    },
     products: [
       {
         qty: {
@@ -19,6 +15,10 @@ const orderSchema = new Schema(
         productId: {
           type: Schema.Types.ObjectId,
           ref: 'products',
+          required: true,
+        },
+        client: {
+          type: String,
           required: true,
         },
       },
