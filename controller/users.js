@@ -107,8 +107,6 @@ module.exports = {
 
       if (user.email && !isAValidEmail(user.email)) return next(400);
 
-      console.log('wellll', findUser);
-
       await User.findByIdAndUpdate(getEmailOrId, {
         $set: {
           email: user.email,

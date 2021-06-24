@@ -17,6 +17,10 @@ module.exports = {
     }
     return { email: params };
   },
+  isObjectId: (params) => {
+    const checkForValidMongoDbID = new RegExp('^[0-9a-fA-F]{24}$');
+    return checkForValidMongoDbID.test(params);
+  },
   isAValidEmail: (email) => {
     const emailRegex = /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/i;
     return (emailRegex.test(email));

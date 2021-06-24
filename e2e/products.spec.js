@@ -196,6 +196,8 @@ describe('DELETE /products/:productid', () => {
         expect(resp.status).toBe(200);
         return fetchAsAdmin(`/products/${_id}`);
       })
-      .then((resp) => expect(resp.status).toBe(404))
+      .then((resp) => {
+        expect(resp.status).toBe(404);
+      })
   ));
 });

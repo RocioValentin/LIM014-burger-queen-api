@@ -2,6 +2,7 @@ const Product = require('../models/product');
 const {
   Paginate,
   emailOrId,
+  isObjectId,
   isAValidEmail,
   isAWeakPassword,
 } = require('../utils/utils');
@@ -23,10 +24,12 @@ module.exports = {
   getProductId: async (req, resp, next) => {
     try {
       const productId = req.params.uid;
+      if (!isObjectId(productId)) return next(404);
       const findProduct = await Product.findOne({ _id: productId });
+      if (!findProduct) return next(404);
       return resp.status(200).json(findProduct);
-    } catch (error) {
-      return next(404);
+    } catch (err) {
+      return next(err);
     }
   },
   createProducts: async (req, resp, next) => {
