@@ -1,4 +1,6 @@
 const Order = require('../models/order');
+const Product = require('../models/order');
+const { isAdmin } = require('../middleware/auth');
 const {
   Paginate,
   emailOrId,
@@ -35,19 +37,28 @@ module.exports = {
       client,
       products,
     } = req.body;
-    console.log('uuuuuuu', req.body, products);
+    // console.log('uuuuuuu', req.body, products);
     try {
       if (!products || products.length === 0) return next(400);
       const newOrder = new Order({
         userId,
         client,
-        products,
+        products: products.map((product) => ({
+          qty: product.qty,
+          product: product.productId,
+        })),
       });
-      console.log(':(', newOrder);
-      const order = await newOrder.save(newOrder);
-      // ord
+      // product = Product.findOne()
 
-      resp.status(200).json(order);
+      const populatedOrder = await newOrder
+        .populate('products.product')
+        .execPopulate();
+
+      // console.log(':(', populatedOrder.products);
+      const order = await populatedOrder.save();
+      // console.log(':v', order);
+
+      return resp.status(200).json(order);
     } catch (err) {
       next(err);
     }
