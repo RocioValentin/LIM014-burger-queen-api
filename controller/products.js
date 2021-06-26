@@ -1,10 +1,7 @@
 const Product = require('../models/product');
 const {
   Paginate,
-  emailOrId,
   isObjectId,
-  isAValidEmail,
-  isAWeakPassword,
 } = require('../utils/utils');
 const { isAdmin } = require('../middleware/auth');
 

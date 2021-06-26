@@ -3,9 +3,7 @@ const Product = require('../models/order');
 const { isAdmin } = require('../middleware/auth');
 const {
   Paginate,
-  emailOrId,
-  isAValidEmail,
-  isAWeakPassword,
+  isObjectId,
 } = require('../utils/utils');
 
 module.exports = {
@@ -24,10 +22,13 @@ module.exports = {
   getOrderById: async (req, resp, next) => {
     try {
       const orderId = req.params.uid;
-      const findOrder = await Order.findOne({ _id: orderId });
-
-      return resp.status(200).json(findOrder);
-    } catch (error) {
+      // console.log("controllerOrder", orderId);
+      const findOrder = await Order.findById(orderId)
+        .populate('products.product');
+      // console.log('where is?', findOrder);
+      if (!findOrder) return next(404);
+      return resp.status(200).send(findOrder);
+    } catch (err) {
       return next(404);
     }
   },
@@ -68,14 +69,26 @@ module.exports = {
       userId,
       client,
       products,
+      status,
     } = req.body;
     try {
       const orderId = req.params.uid;
+      if (!isObjectId(orderId)) return next(404);
+      if (Object.keys(req.body).length === 0) return next(400);
+      const statusOrder = [
+        'pending',
+        'canceled',
+        'delivering',
+        'delivered',
+        'preparing',
+      ];
+      if (status && !statusOrder.includes(status)) return next(400);
 
       await Order.findByIdAndUpdate({ _id: orderId }, {
         userId,
         client,
         products,
+        status,
       });
 
       const findOrder = await Order.findOne({ _id: orderId });
@@ -87,6 +100,7 @@ module.exports = {
   deleteOrder: async (req, resp, next) => {
     try {
       const orderId = req.params.uid;
+      if (!isObjectId(orderId)) return next(404);
       const findOrder = await Order.findOne({ _id: orderId });
       await Order.findByIdAndDelete({ _id: orderId });
       resp.status(200).send(findOrder);

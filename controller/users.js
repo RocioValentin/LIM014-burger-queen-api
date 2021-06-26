@@ -80,43 +80,37 @@ module.exports = {
       next(err);
     }
   },
-
   updateUser: async (req, res, next) => {
     const user = req.body;
-    // const { email, password, roles } = req.body;
     try {
-      // const userId = req.params.uid;
-      // const saltRounds = 10;
       const { uid } = req.params;
       const getEmailOrId = emailOrId(uid);
 
       const findUser = await User.findOne(getEmailOrId);
+      // si la usuaria solicitada no existe
       if (!findUser) return next(404);
+      // una usuaria no admin intenta de modificar sus `roles`
+      if (!isAdmin(req) && user.roles) return next(403);
 
+      // si no es ni admin o la misma usuaria
       if (req.userAuth.uid !== findUser._id.toString() && !isAdmin(req)) {
         return next(403);
       }
-
-      // if (!user) return next(403);
-
-      if (!isAdmin(req) && user.roles) return next(403);
-
+      // si no se proveen `email` o `password` o ninguno de los dos
       if (Object.keys(user).length === 0) return next(400);
 
-      if (user.password && isAWeakPassword(user.password)) return next(400);
-
-      if (user.email && !isAValidEmail(user.email)) return next(400);
-
-      await User.findByIdAndUpdate(getEmailOrId, {
-        $set: {
-          email: user.email,
-          password: user.password,
-          roles: user.roles,
+      const userUpdate = await User.findOneAndUpdate(
+        getEmailOrId,
+        {
+          $set: {
+            user,
+          },
         },
-      }, { new: true });
+        { new: true },
+      );
       // console.log(req.userAuth, findUser);
 
-      return res.json(findUser);
+      return res.status(200).send(userUpdate);
     } catch (err) {
       next(err);
       // should fail with 404 when admin not found
@@ -133,10 +127,12 @@ module.exports = {
 
       const findUser = await User.findOne(getEmailOrId);
       if (!findUser) return next(404);
-      if (!req.userAuth.uid === req.params.uid || !isAdmin(req)) {
+      if (req.userAuth.uid !== findUser._id.toString() && !isAdmin(req)) {
         return next(403);
       }
-      await User.findByIdAndDelete(getEmailOrId);
+      // console.log('ad!!!', !req.userAuth.uid, '  z ', req.params.uid);
+      // console.log('??????admin', !isAdmin(req));
+      await User.findOneAndDelete(getEmailOrId);
 
       return resp.status(200).send(findUser);
     } catch (err) {
