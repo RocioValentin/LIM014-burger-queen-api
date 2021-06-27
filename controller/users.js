@@ -85,7 +85,6 @@ module.exports = {
     try {
       const { uid } = req.params;
       const getEmailOrId = emailOrId(uid);
-
       const findUser = await User.findOne(getEmailOrId);
       // si la usuaria solicitada no existe
       if (!findUser) return next(404);
@@ -102,15 +101,14 @@ module.exports = {
       const userUpdate = await User.findOneAndUpdate(
         getEmailOrId,
         {
-          $set: {
-            user,
-          },
+          $set: user,
         },
         { new: true },
-      );
+      ).select('-password');
+
       // console.log(req.userAuth, findUser);
 
-      return res.status(200).send(userUpdate);
+      return res.status(200).json(userUpdate);
     } catch (err) {
       next(err);
       // should fail with 404 when admin not found
