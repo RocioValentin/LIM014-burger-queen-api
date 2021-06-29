@@ -11,11 +11,13 @@ module.exports = {
     try {
       const url = `${req.protocol}://${req.get('host')}${req.path}`;
       const options = {
+        populate: 'products.product',
         page: parseInt(req.query.page, 10) || 1,
         limit: parseInt(req.query.limit, 10) || 10,
       };
       const orderPaginate = await Order.paginate({}, options);
       resp.links(Paginate(url, options, orderPaginate));
+      // console.log(orderPaginate.docs);
       return resp.status(200).json(orderPaginate.docs);
     } catch (err) { return next(err); }
   },
@@ -25,8 +27,9 @@ module.exports = {
       // console.log("controllerOrder", orderId);
       const findOrder = await Order.findById(orderId)
         .populate('products.product');
-      // console.log('where is?', findOrder);
+
       if (!findOrder) return next(404);
+      // console.log('uuu', findOrder);
       return resp.status(200).send(findOrder);
     } catch (err) {
       return next(404);
@@ -57,9 +60,8 @@ module.exports = {
 
       // console.log(':(', populatedOrder.products);
       const order = await populatedOrder.save();
-      // console.log(':v', order);
 
-      return resp.status(200).json(order);
+      return resp.status(200).send(order);
     } catch (err) {
       next(err);
     }

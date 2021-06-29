@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 const { Schema, model } = require('mongoose');
 const moongosePaginate = require('mongoose-paginate-v2');
 // Estrcuturar data de order
@@ -17,7 +17,7 @@ const orderSchema = new Schema(
         type: Number,
       },
       product: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: 'Product',
       },
     }],
